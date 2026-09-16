@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>南华大学 · 真伪验证</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #ffffff;
+      color: #1c1c1e;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* 顶部唯一的一行蓝色标题栏 */
+    .top-bar {
+      background-color: #2c7be5;
+      color: #ffffff;
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+    
+    /* 主内容容器 */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px 40px;
+      background-color: #ffffff;
+      position: relative;
+      overflow-y: auto;
+    }
+    
+    .verify-card {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .university-name {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1c1c1e;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    
+    .subtitle {
+      font-size: 16px;
+      font-weight: 400;
+      color: #3a3a3c;
+      margin-bottom: 24px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+    
+    /* 验证通过印章图片区域 */
+    .stamp-image-container {
+      margin-bottom: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+    
+    .stamp-image-container img {
+      max-width: 240px;
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    
+    /* 信息区域 */
+    .info-section {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 32px;
+      padding: 0 8px;
+    }
+    
+    .info-row {
+      display: flex;
+      margin-bottom: 10px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    
+    .info-label {
+      font-weight: 700;
+      color: #1c1c1e;
+      min-width: 110px;
+      letter-spacing: 0.3px;
+    }
+    
+    .info-value {
+      color: #1c1c1e;
+      font-weight: 400;
+      flex: 1;
+      word-break: break-word;
+    }
+    
+    .btn-view-source {
+      display: block;
+      width: 100%;
+      max-width: 420px;
+      padding: 14px 20px;
+      background-color: #2c7be5;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 17px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(44, 123, 229, 0.3);
+    }
+    
+    .btn-view-source:hover { background-color: #1e62c4; }
+    .btn-view-source:active { transform: scale(0.98); }
+    
+    /* 水印层 */
+    .watermark {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      opacity: 0.055;
+      transform: rotate(-25deg) scale(1.2);
+    }
+    
+    .watermark span {
+      font-size: 24px;
+      font-weight: 700;
+      color: #000000;
+      letter-spacing: 4px;
+      padding: 28px 40px;
+      white-space: nowrap;
+      user-select: none;
+    }
+    
+    /* ===== PDF 全屏模态框 ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 10000;
+      display: none;
+      flex-direction: column;
+    }
+    
+    .modal-overlay.active { display: flex; }
+    
+    .modal-header {
+      background-color: #2c7be5;
+      color: #ffffff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    
+    .modal-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-right: 12px;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: #ffffff;
+      font-size: 28px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 6px;
+      font-weight: 300;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+      flex-shrink: 0;
+    }
+    
+    .modal-close:hover { opacity: 1; }
+    
+    /* PDF 显示区域 */
+    .modal-body {
+      flex: 1;
+      background-color: #525659;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .modal-body iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background-color: #525659;
+    }
+    
+    /* 移动端：提示用系统PDF查看器打开 */
+    .pdf-tip {
+      display: none;
+      padding: 40px 24px;
+      text-align: center;
+      color: #ffffff;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+    
+    .pdf-tip a {
+      color: #6cb2ff;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+    
+    @media (max-width: 640px) {
+      .pdf-desktop { display: none; }
+      .pdf-tip { display: block; }
+    }
+    
+    /* 响应式 */
+    @media (max-width: 480px) {
+      .top-bar {
+        padding: 12px 16px;
+        font-size: 17px;
+      }
+      .university-name { font-size: 22px; }
+      .stamp-image-container img { max-width: 180px; }
+      .info-row { font-size: 14px; }
+      .info-label { min-width: 90px; }
+      .watermark span { font-size: 18px; padding: 18px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部唯一的一行标题栏 -->
+  <div class="top-bar">真伪验证</div>
+  <!-- 主内容 -->
+  <div class="main-content">
+    <div class="verify-card">
+      <div class="university-name">南华大学</div>
+      <div class="subtitle">电子凭证验证结果</div>
+
+      <div class="stamp-image-container">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='180' viewBox='0 0 260 180'%3E%3Ccircle cx='130' cy='90' r='75' fill='none' stroke='%232e8b57' stroke-width='4'/%3E%3Ccircle cx='130' cy='90' r='65' fill='none' stroke='%232e8b57' stroke-width='1.5'/%3E%3Crect x='60' y='72' width='140' height='36' fill='white' stroke='%232e8b57' stroke-width='3' transform='rotate(-8 130 90)'/%3E%3Ctext x='130' y='99' font-family='sans-serif' font-size='26' font-weight='bold' fill='%232e8b57' text-anchor='middle' transform='rotate(-8 130 90)'%3E验证通过%3C/text%3E%3Ctext x='95' y='55' font-size='22' fill='%232e8b57'%3E★%3C/text%3E%3Ctext x='150' y='135' font-size='22' fill='%232e8b57'%3E★%3C/text%3E%3C/svg%3E" alt="验证通过" />
+      </div>
+    
+      <div class="info-section">
+        <div class="info-row">
+          <span class="info-label">申请人：</span>
+          <span class="info-value">胡锦杰</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">凭证名称：</span>
+          <span class="info-value">中文成绩单（主修）</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">申请时间：</span>
+          <span class="info-value">2026-08-25 11:48:14</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">凭证有效截止日期：</span>
+          <span class="info-value">2027-02-21 11:48:14</span>
+        </div>
+      </div>
+    
+      <button class="btn-view-source" id="viewSourceBtn">查看源文件</button>
+    </div>
+  </div>
+
+  <!-- 水印层 -->
+  <div class="watermark">
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+    <span>胡锦杰2025</span>
+  </div>
+
+  <!-- PDF 全屏模态框 -->
+  <div class="modal-overlay" id="transcriptModal">
+    <div class="modal-header">
+      <h2>南华大学-胡锦杰-电子成绩单(主修).pdf</h2>
+      <button class="modal-close" id="closeModalBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- 桌面端：iframe 内嵌 PDF -->
+      <iframe
+        class="pdf-desktop"
+        id="pdfFrame"
+        src="about:blank"
+        title="电子成绩单PDF"
+        allowfullscreen
+      ></iframe>
+      <!-- 移动端：直接跳转/打开 PDF 的提示 -->
+      <div class="pdf-tip">
+        <p>📄 您的浏览器可能不支持内嵌预览 PDF。</p>
+        <p style="margin-top:16px;">
+          <a id="pdfDirectLink" href="#" target="_blank" rel="noopener">点击此处打开成绩单 PDF 文件</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ✅ 已修改为 usc.pdf
+      const PDF_FILE = 'usc.pdf';
+
+      const viewSourceBtn = document.getElementById('viewSourceBtn');
+      const transcriptModal = document.getElementById('transcriptModal');
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      const pdfFrame = document.getElementById('pdfFrame');
+      const pdfDirectLink = document.getElementById('pdfDirectLink');
+    
+      viewSourceBtn.addEventListener('click', function() {
+        // 用 iframe 直接加载 PDF 文件
+        pdfFrame.src = PDF_FILE;
+        // 同时给移动端的链接赋值
+        pdfDirectLink.href = PDF_FILE;
+    
+        transcriptModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      });
+    
+      function closeModal() {
+        transcriptModal.classList.remove('active');
+        document.body.style.overflow = '';
+        // 关闭时清空 iframe，避免后台继续加载
+        pdfFrame.src = 'about:blank';
+      }
+    
+      closeModalBtn.addEventListener('click', closeModal);
+    
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && transcriptModal.classList.contains('active')) {
+          closeModal();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
